@@ -1,24 +1,26 @@
-bayespval_beta_meta<-function(data){
+bayespval_beta_meta<-function(beta,sigma,r_vec = c(0, 1e-5, 6e-3, 0.024)){
   
-  beta_o<-data[,1]
+  beta_o<-beta[1]
+  beta_r<-beta[2]
   
-  sigma_o<-data[,2]^2
+  sigma_o<-sigma[1]^2
   
-  beta_r<-data[,3]
+  sigma_r<-sigma[2]^2
   
-  sigma_r<-data[,4]^2
+  ####old grid
+  #eta2_vec = c(sigma_o)
   
-  eta2_vec = c(sigma_o)
+  #eta2 = 2*sigma_o
+  #while(eta2<= beta_o^2 + sigma_o){
+  #  eta2_vec = c(eta2_vec, eta2)
+  #  eta2 = 2*eta2
+  #}
   
-  eta2 = 2*sigma_o
-  while(eta2<= beta_o^2 + sigma_o){
-    eta2_vec = c(eta2_vec, eta2)
-    eta2 = 2*eta2
-  }
-  
-  #eta2_vec = c(1.0, 2.0, 4.0, 8.0)
-  pv = c(1.0, 0.99, 0.975, 0.95)
-  rv = c(0, 1e-5, 6e-3, 0.024)
+  ####new grid
+  eta2_vec = (beta_o^2+sigma_o)*c(1,2,4)
+
+  #pv = c(1.0, 0.99, 0.975, 0.95)
+  rv = r_vec
   
   make_grid <-function(eta2){
     grid = sapply(rv, function(x)  c(eta2*(1-x), eta2*x))
@@ -41,7 +43,6 @@ bayespval_beta_meta<-function(data){
     (sigma_o+phi2[x])*omg2[x]/(sigma_o+phi2[x]+omg2[x])+phi2[x]+sigma_r)
   
   
-  
   pval<-sapply(1:length(mean),function(x) pnorm(beta_r, mean=mean[x],sd=sqrt(var[x]))) 
   
   wts = dnorm(beta_o, mean=0, sd=sqrt(omg2+sigma_o+phi2))
@@ -54,15 +55,9 @@ bayespval_beta_meta<-function(data){
 
 
 
-#d<-read.table("rpp_extract.dat", head=T)
+d<-read.table("rpp_extract.dat", head=T)
+attach(d)
 #rpp_data<-d[,c("beta_orig","se_orig","beta_rep","se_rep")]
-#rpp_pval_new<-sapply(1:nrow(rpp_data),function(x) bayespval_beta_meta(data=rpp_data[x,]))
-
-#sim_pval<-sapply(1:nrow(rep_data),function(x) bayespval_beta_meta(data=rep_data[x,]))
-load("SSRP.RData")
-#ssrp_data<-SSRP[,c("fiso","se_fiso","fisi","se_fisi")]
-#ssrp_pval<-sapply(1:nrow(ssrp_data),function(x) bayespval_beta_meta(data=ssrp_data[x,]))
-
-
+rpp_pval<-sapply(1:nrow(d),function(x) bayespval_beta_meta(beta=c(beta_orig[x], beta_rep[x]),sigma=c(se_orig[x],  se_rep[x])))
 
 

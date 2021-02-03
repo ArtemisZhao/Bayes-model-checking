@@ -1,6 +1,6 @@
 library(mvtnorm)
 
-bayes_posterior_check<-function(data,L){
+bayes_posterior_check<-function(data,L=1000,r_vec = c(0, 1e-5, 6e-3, 0.024)){
     
   m<-ncol(data)/2  ###number of replicates
   beta<-c() 
@@ -12,19 +12,12 @@ bayes_posterior_check<-function(data,L){
   }
   
   
-  eta2_vec = c(min(sd2))
- 
-  eta2 = 2*min(sd2)
-  
-  while(eta2<= max(beta^2 + sd2)){
-    eta2_vec = c(eta2_vec, eta2)
-    eta2 = 2*eta2
-  }
+  eta2_vec = (min(beta)^2+min(sd2))*c(1,2,4)
   
   #eta2_vec = c(1.0, 2.0, 4.0, 8.0)
   ######no p=1
-  pv = c( 0.99, 0.975, 0.95)
-  rv = c( 1e-5, 6e-3, 0.024)
+  #pv = c( 0.99, 0.975, 0.95)
+  rv = r_vec
   
   make_grid <-function(eta2){
     grid = sapply(rv, function(x)  c(eta2*(1-x), eta2*x))
@@ -51,6 +44,7 @@ bayes_posterior_check<-function(data,L){
   wts<-wts/mean(wts)
   
   simbeta<-c()
+  dist_list<-c()
   for (t in 1:L){
   k<-sample(1:length(omg2_list),1,prob=wts)
   
@@ -69,10 +63,14 @@ bayes_posterior_check<-function(data,L){
     #print(betaj)
     betanewjs<-c(betanewjs,betaj+rnorm(1,0,sqrt(sd2[j])))
   }
+  
+  ###test statistics : max-mean
+  dist<-max(betanewjs)-mean(betanewjs)
   simbeta<-rbind(simbeta,betanewjs)
+  dist_list<-c(dist_list,dist)
   }
-  return(simbeta)
+  com<-max(beta)-mean(beta)
+ 
+  return( length(which(dist_list>com))/L)
 }
 
-
-betatilda<-bayes_posterior_check(cbind(rpp_data[1,],rpp_data[2,]),L=10000)

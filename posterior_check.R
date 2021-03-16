@@ -1,18 +1,11 @@
 library(mvtnorm)
-
-bayes_posterior_check<-function(data,L=1000,r_vec = c(0, 1e-5, 6e-3, 0.024)){
+library(e1071)
+bayes_posterior_check<-function(beta,sd2,L=1000,r_vec = c(1e-5, 6e-3, 0.024),test="skew",print_test_dist=FALSE){
     
-  m<-ncol(data)/2  ###number of replicates
-  beta<-c() 
-  sd2<-c()
+  m<-length(beta)  ###number of replicates
   
-  for (i in 1:m){
-    beta<-c(beta,data[,2*i-1])
-    sd2<-c(sd2,data[,2*i]^2)
-  }
-  
-  
-  eta2_vec = (min(beta)^2+min(sd2))*c(1,2,4)
+  chis1<-qchisq(c(0.25,0.5,0.75),df=1)
+  eta2_vec = c(min(beta)^2/chis1,mean(beta)^2/chis1)
   
   #eta2_vec = c(1.0, 2.0, 4.0, 8.0)
   ######no p=1
@@ -34,6 +27,7 @@ bayes_posterior_check<-function(data,L=1000,r_vec = c(0, 1e-5, 6e-3, 0.024)){
   phi2_list = grid[,2]
   
   wts<-c()
+  count=0
   for (i in 1:length(omg2_list)){
     omg2<-omg2_list[i]
     phi2<-phi2_list[i]
@@ -41,36 +35,169 @@ bayes_posterior_check<-function(data,L=1000,r_vec = c(0, 1e-5, 6e-3, 0.024)){
     wtsi<-dmvnorm(beta, mean=rep(0,m), sigma=Sigma)
     wts<-c(wts,wtsi)
   }
-  wts<-wts/mean(wts)
+  wts<-wts/sum(wts)
   
   simbeta<-c()
   dist_list<-c()
+  dist_list2<-c()
   for (t in 1:L){
   k<-sample(1:length(omg2_list),1,prob=wts)
   
   phi2<-phi2_list[k]
   omg2<-omg2_list[k]
+  
+  
   barbeta_pos_var<-1/(1/omg2+sum(1/(sd2+phi2)))  
   barbeta_pos_mean<-barbeta_pos_var*sum(beta/(sd2+phi2))
   barbeta<-rnorm(1,barbeta_pos_mean,sqrt(barbeta_pos_var)) 
-  
+
   betanewjs<-c()
+  tnewjs<-c()
   for (j in 1:m){
     #print(c(i,j))
     betaj_var<-1/(1/phi2+1/sd2[j])
     betaj_mean<-betaj_var*(barbeta/phi2+beta[j]/sd2[j])
     betaj<-rnorm(1,betaj_mean,sqrt(betaj_var))
     #print(betaj)
-    betanewjs<-c(betanewjs,betaj+rnorm(1,0,sqrt(sd2[j])))
+    
+    betanewj = betaj+rnorm(1,0,sqrt(sd2[j]))
+    betanewjs<-c(betanewjs,betanewj)
   }
-  
-  ###test statistics : max-mean
+  if (test == "Q"){
+    q = sum((betanewjs - mean(betanewjs))^2 / (sd2 + phi2))
+    q_orig = sum((beta - mean(beta))^2 / (sd2 + phi2))
+    dist_list<- c(dist_list,q)
+    count = count + (q>q_orig)
+    ##the difference
+    #dist=q-q_orig
+    #dist_list2<-c(dist_list2,dist)
+  }
+  if (test == "egger-hetero"){
+    y = betanewjs / sqrt(sd2 + phi2)
+    x = 1 / sqrt(sd2 + phi2)
+    a = abs(summary(lm(y ~ x))$coefficients[1,1])
+    dist_list = c(dist_list,a)
+    
+    y_orig = beta / sqrt(sd2 + phi2)
+    x_orig = 1 / sqrt(sd2 + phi2)
+    com = abs(summary(lm(y_orig~x_orig))$coefficients[1,1])
+    
+    count = count + (a>com)
+  }
+  ###test statistics 2 skewness:
+  if (test=="skew"){
+    y = betanewjs / sqrt(sd2 + phi2)
+    x = 1 / sqrt(sd2 + phi2)
+    muhat = summary(lm(y ~ x))$coefficients[2,1]
+    dis = (betanewjs - muhat)/sqrt(sd2+phi2)
+    skew<-abs(skewness(dis))
+    dist_list = c(dist_list,skew)
+    
+    y_orig = beta / sqrt(sd2 + phi2)
+    x_orig = 1 / sqrt(sd2 + phi2)
+    muhat = summary(lm(y_orig ~ x_orig))$coefficients[2,1]
+    dis = (beta - muhat)/sqrt(sd2+phi2)
+    com = abs(skewness(dis))
+    count=count+(skew>com)
+  }
+  if (test== "egger")
+  { ### test statistics 3 egger regression:
+    y = betanewjs/sqrt(sd2)
+    x= 1/sqrt(sd2)
+    a = summary(lm(y ~ x))$coefficients[1,1]
+    dist_list = c(dist_list,abs(a))
+    }
+  if (test == "diff")
+  { ###test statistics 1 naive: 
+    ###max mean difference
   dist<-max(betanewjs)-mean(betanewjs)
-  simbeta<-rbind(simbeta,betanewjs)
   dist_list<-c(dist_list,dist)
   }
-  com<-max(beta)-mean(beta)
- 
+}
+  if (print_test_dist){
+    print(length(dist_list))
+    hist(dist_list)
+  }
+ if (test == "skew"){
+   return(count/L)
+ }
+  if (test == "egger-hetero"){
+    return(count/L)
+  }
+  if (test == "Q"){
+    return(count/L)
+  }
+ if (test == "egger"){
+   y = beta / sqrt(sd2)
+   x = 1 / sqrt(sd2)
+   com = abs(summary(lm(y~x))$coefficients[1,1])
+ }
+  if (test == "diff"){
+    com = max(beta)-mean(beta)}
+  
   return( length(which(dist_list>com))/L)
 }
+
+
+set.seed(123)
+sim_data<-function(k, omg, n=5, sd=1){
+  beta = rnorm(1,mean=0,sd=omg)
+  
+  bv = rnorm(n, mean = beta, sd=k*abs(beta))
+  
+  zv = rnorm(n, mean = bv, sd = sd)
+  
+  return(matrix(zv,nrow=1))
+}
+
+#null_data = t(sapply(1:4000, function(x) sim_data(k=0,omg=0,r=0.6)))
+fix_data = t(sapply(1:1000, function(x) sim_data(k=0, omg=1, n=10)))
+rep_data = t(sapply(1:1000, function(x) sim_data(k=0.1, omg=1, n=10)))
+irr_data = t(sapply(1:1000,  function(x) sim_data(k=3, omg=1, n=10)))
+
+fix_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=fix_data[x,],sd2=rep(1,10),test="diff"))
+
+rep_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=rep_data[x,],sd2=rep(1,10),test="diff"))
+
+irr_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=irr_data[x,],sd2=rep(1,10),test="diff"))
+
+fix_p_q<-sapply(1:1000, function(x) bayes_posterior_check(beta=fix_data[x,],sd2=rep(1,10),test="Q"))
+
+rep_p_q<-sapply(1:1000, function(x) bayes_posterior_check(beta=rep_data[x,],sd2=rep(1,10),test="Q"))
+
+irr_p_q<-sapply(1:1000, function(x) bayes_posterior_check(beta=irr_data[x,],sd2=rep(1,10),test="Q"))
+
+pp1<-data.frame(bayes_pval=fix_p)
+#p1<-ggplot(pp1,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
+pp2<-data.frame(bayes_pval=rep_p)
+#p2<-ggplot(pp2,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
+pp3<-data.frame(bayes_pval=irr_p)
+#p3<-ggplot(pp3,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
+#ggarrange(p1,p2,p3,ncol=3,labels=c("fix","rep","irre"),
+#         label.args = list(gp = grid::gpar(font = 2, cex =0.8)))
+data<-data.frame(type=c(rep("fix",1000),rep("rep",1000),rep("irre",1000)),bayes_pval=rbind(pp1,pp2,pp3))
+data[,1]<-factor(data[,1],levels=c("fix","rep","irre"))
+plot1<-ggplot(data=data,aes(x=bayes_pval))+
+  geom_histogram(color="black",fill="white")+
+  facet_grid(.~type)+theme_bw()
+plot1
+
+ppp1<-data.frame(bayes_pval=fix_p_q)
+#p1<-ggplot(ppp1,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
+ppp2<-data.frame(bayes_pval=rep_p_q)
+#pp2<-ggplot(ppp2,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
+ppp3<-data.frame(bayes_pval=irr_p_q)
+#p3<-ggplot(ppp3,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
+
+data2<-data.frame(type=c(rep("fix",1000),rep("rep",1000),rep("irre",1000)),bayes_pval=rbind(ppp1,ppp2,ppp3))
+
+data2[,1]<-factor(data2[,1],levels=c("fix","rep","irre"))
+plot2<-ggplot(data=data2,aes(x=bayes_pval))+
+  geom_histogram(color="black",fill="white")+
+  facet_grid(.~type)+theme_bw()
+plot2
+
+#ggarrange(p1,p2,p3,ncol=3,labels=c("fix","rep","irre"),
+ #         label.args = list(gp = grid::gpar(font = 2, cex =0.8)))
+
 

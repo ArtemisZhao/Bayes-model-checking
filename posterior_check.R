@@ -7,9 +7,6 @@ bayes_posterior_check<-function(beta,sd2,L=1000,r_vec = c(1e-5, 6e-3, 0.024),tes
   chis1<-qchisq(c(0.25,0.5,0.75),df=1)
   eta2_vec = c(min(beta)^2/chis1,mean(beta)^2/chis1)
   
-  #eta2_vec = c(1.0, 2.0, 4.0, 8.0)
-  ######no p=1
-  #pv = c( 0.99, 0.975, 0.95)
   rv = r_vec
   
   make_grid <-function(eta2){
@@ -37,15 +34,14 @@ bayes_posterior_check<-function(beta,sd2,L=1000,r_vec = c(1e-5, 6e-3, 0.024),tes
   }
   wts<-wts/sum(wts)
   
-  simbeta<-c()
+  
   dist_list<-c()
-  dist_list2<-c()
+  
   for (t in 1:L){
   k<-sample(1:length(omg2_list),1,prob=wts)
   
   phi2<-phi2_list[k]
   omg2<-omg2_list[k]
-  
   
   barbeta_pos_var<-1/(1/omg2+sum(1/(sd2+phi2)))  
   barbeta_pos_mean<-barbeta_pos_var*sum(beta/(sd2+phi2))
@@ -63,15 +59,14 @@ bayes_posterior_check<-function(beta,sd2,L=1000,r_vec = c(1e-5, 6e-3, 0.024),tes
     betanewj = betaj+rnorm(1,0,sqrt(sd2[j]))
     betanewjs<-c(betanewjs,betanewj)
   }
+  ###test 4: Cochran's Q test
   if (test == "Q"){
     q = sum((betanewjs - mean(betanewjs))^2 / (sd2 + phi2))
     q_orig = sum((beta - mean(beta))^2 / (sd2 + phi2))
     dist_list<- c(dist_list,q)
     count = count + (q>q_orig)
-    ##the difference
-    #dist=q-q_orig
-    #dist_list2<-c(dist_list2,dist)
   }
+  ####test statistics 3 egger regression with heterogeneous param
   if (test == "egger-hetero"){
     y = betanewjs / sqrt(sd2 + phi2)
     x = 1 / sqrt(sd2 + phi2)
@@ -100,42 +95,21 @@ bayes_posterior_check<-function(beta,sd2,L=1000,r_vec = c(1e-5, 6e-3, 0.024),tes
     com = abs(skewness(dis))
     count=count+(skew>com)
   }
-  if (test== "egger")
-  { ### test statistics 3 egger regression:
-    y = betanewjs/sqrt(sd2)
-    x= 1/sqrt(sd2)
-    a = summary(lm(y ~ x))$coefficients[1,1]
-    dist_list = c(dist_list,abs(a))
-    }
   if (test == "diff")
   { ###test statistics 1 naive: 
-    ###max mean difference
-  dist<-max(betanewjs)-mean(betanewjs)
+    ###max min difference
+  dist<-max(betanewjs)-min(betanewjs)
   dist_list<-c(dist_list,dist)
+  com = max(beta)-min(beta)
+  count = count+(dist>com)
   }
 }
-  if (print_test_dist){
+ if (print_test_dist){
     print(length(dist_list))
     hist(dist_list)
   }
- if (test == "skew"){
-   return(count/L)
- }
-  if (test == "egger-hetero"){
-    return(count/L)
-  }
-  if (test == "Q"){
-    return(count/L)
-  }
- if (test == "egger"){
-   y = beta / sqrt(sd2)
-   x = 1 / sqrt(sd2)
-   com = abs(summary(lm(y~x))$coefficients[1,1])
- }
-  if (test == "diff"){
-    com = max(beta)-mean(beta)}
   
-  return( length(which(dist_list>com))/L)
+  return( count/L)
 }
 
 
@@ -161,12 +135,6 @@ rep_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=rep_data[x,],sd2=re
 
 irr_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=irr_data[x,],sd2=rep(1,10),test="diff"))
 
-fix_p_q<-sapply(1:1000, function(x) bayes_posterior_check(beta=fix_data[x,],sd2=rep(1,10),test="Q"))
-
-rep_p_q<-sapply(1:1000, function(x) bayes_posterior_check(beta=rep_data[x,],sd2=rep(1,10),test="Q"))
-
-irr_p_q<-sapply(1:1000, function(x) bayes_posterior_check(beta=irr_data[x,],sd2=rep(1,10),test="Q"))
-
 pp1<-data.frame(bayes_pval=fix_p)
 #p1<-ggplot(pp1,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
 pp2<-data.frame(bayes_pval=rep_p)
@@ -181,23 +149,5 @@ plot1<-ggplot(data=data,aes(x=bayes_pval))+
   geom_histogram(color="black",fill="white")+
   facet_grid(.~type)+theme_bw()
 plot1
-
-ppp1<-data.frame(bayes_pval=fix_p_q)
-#p1<-ggplot(ppp1,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
-ppp2<-data.frame(bayes_pval=rep_p_q)
-#pp2<-ggplot(ppp2,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
-ppp3<-data.frame(bayes_pval=irr_p_q)
-#p3<-ggplot(ppp3,aes(x=bayes_pval))+geom_histogram(color="black",fill="white")
-
-data2<-data.frame(type=c(rep("fix",1000),rep("rep",1000),rep("irre",1000)),bayes_pval=rbind(ppp1,ppp2,ppp3))
-
-data2[,1]<-factor(data2[,1],levels=c("fix","rep","irre"))
-plot2<-ggplot(data=data2,aes(x=bayes_pval))+
-  geom_histogram(color="black",fill="white")+
-  facet_grid(.~type)+theme_bw()
-plot2
-
-#ggarrange(p1,p2,p3,ncol=3,labels=c("fix","rep","irre"),
- #         label.args = list(gp = grid::gpar(font = 2, cex =0.8)))
 
 

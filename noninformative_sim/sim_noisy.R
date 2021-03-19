@@ -18,9 +18,9 @@ for (i in 1:length(sdlist)){
   batcheffect<-c(rnorm(1000,0,0.6)) 
   
   Ybatch<-sapply(1:length(beta1), function(i) 
-    x*beta1[i]+batchlabels*batcheffect[i]+rnorm(40))
+    x*beta1[i]+batchlabels*batcheffect[i]+rnorm(n_arms*2))
   
-  Yrep<-sapply(1:length(beta1), function(i) x*beta1[i]+rnorm(40,0,sd))
+  Yrep<-sapply(1:length(beta1), function(i) x*beta1[i]+rnorm(n_arms*2,0,sd))
   
 
   est<-t(sapply(1:ncol(Y),function(j)

@@ -11,10 +11,14 @@ indnum<-c(50,200)
 # wipi<-function(p){
 #   return(exp(-4*p^(1.5)))
 # }
-
+# 
+# wipi<-function(p){
+#   if (p<0.05){return(1)}
+#   else{return(0)}
+# }
+##without publication bias
 wipi<-function(p){
-  if (p<0.05){return(1)}
-  else{return(0)}
+  return(1)
 }
 
 betafinal<-c()

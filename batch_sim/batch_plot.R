@@ -1,6 +1,6 @@
 library(ggplot2)
 library(egg)
-etalist=seq(0.2,2,0.2)
+etalist=seq(0.2,1,0.2)
 
 pval_batch_list <- c()
 

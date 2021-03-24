@@ -44,15 +44,19 @@ bayespval_beta_meta<-function(beta,sd,r_vec = c(0, 1e-5, 6e-3, 0.024),test="two_
   
   res = NA
   if (test=="pub_bias"){
-    if (beta_o>0){
-      res= mean(pval)}
-    if (beta_o<0){
-      res = 1-mean(pval)
-    }
+    mean_scale=mean/beta_o
+    sd_scale=sqrt(var)/abs(beta_o)
+    pval_new<-sapply(1:length(mean),function(x) pnorm(beta_r/beta_o, mean=mean_scale[x],sd=sd_scale[x])) 
+    res = wts%*%pval_new
+    return(res)
+    #if (beta_o>0){
+     # res= mean(pval)}
+    #if (beta_o<0){
+    #  res = 1-mean(pval)
+    #}
   }
   if (test=="two_sided"){
     res = 2*min(pval_wt,1-pval_wt)
-  }
   
   if (report_CI){
     mixture_CDF_right<-Vectorize(function(t) wts%*%pnorm(t,mean=mean,sd=sqrt(var))-0.975)
@@ -63,8 +67,7 @@ bayespval_beta_meta<-function(beta,sd,r_vec = c(0, 1e-5, 6e-3, 0.024),test="two_
     
     return(c(CI_left=root_left,CI_right=root_right,pval=res))
   }
-  else{
-    return(res)
+    else{return(res)}
   }
 }
 

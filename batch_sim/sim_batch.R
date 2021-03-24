@@ -1,7 +1,7 @@
 set.seed(123)
 
 ###batch experiment simulation
-etalist=seq(0.2,2,0.2)
+etalist=seq(0.2,1,0.2)
 for (i in 1:length(etalist)){
   eta<-etalist[i]
   beta<-rep(1,1000) ##fixed at 1

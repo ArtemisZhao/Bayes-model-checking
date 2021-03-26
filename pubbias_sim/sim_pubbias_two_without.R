@@ -16,6 +16,7 @@ indnum<-c(50,200)
 #   if (p<0.05){return(1)}
 #   else{return(0)}
 # }
+
 ##without publication bias
 wipi<-function(p){
   return(1)
@@ -62,6 +63,6 @@ for (k in 1:rep){
   sdfinal<-rbind(sdfinal,sdlist)
 }
 
-pval<-sapply(1:rep, function(x) bayespval_beta_meta(beta=betafinal[x,],sd=sdfinal[x,],test="pub_bias"))
+pval2<-sapply(1:rep, function(x) bayespval_beta_meta(beta=betafinal[x,],sd=sdfinal[x,],test="pub_bias"))
 hist(pval)
 

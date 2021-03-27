@@ -58,6 +58,5 @@ cardi = bayes_posterior_check(beta=data_cardi_trans[,1],sd=data_cardi_trans[,2],
 
 cardi_severe = bayes_posterior_check(beta=data_cardi_severe_trans[-3,1],sd=data_cardi_severe_trans[-3,2], test = "Q",print_test_dist = T)
 
-library(metafor)
 
 

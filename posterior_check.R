@@ -62,10 +62,15 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(1e-5, 6e-3, 0.024),test
   tnewjs<-c()
   for (j in 1:m){
     #print(c(i,j))
+    if (phi2==0){
+      betaj=barbeta
+    }
+    else{
     betaj_var<-1/(1/phi2+1/sd2[j])
     betaj_mean<-betaj_var*(barbeta/phi2+beta[j]/sd2[j])
     betaj<-rnorm(1,betaj_mean,sqrt(betaj_var))
     #print(betaj)
+    }
     
     betanewj = betaj+rnorm(1,0,sqrt(sd2[j]))
     betanewjs<-c(betanewjs,betanewj)

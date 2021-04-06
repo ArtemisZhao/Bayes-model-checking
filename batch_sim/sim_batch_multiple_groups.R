@@ -1,5 +1,7 @@
 #### n number of repeats; m number of study in each repeat
-n=1000
+library(ggplot2)
+library(egg)
+n=5000
 m=5
 
 #####parameters
@@ -9,7 +11,7 @@ p_bias = 0.4
 
 phi_list = seq(0,1,0.1)
 ## n in case/control
-n_arms = 40
+n_arms = 100
 ### varaince magnitude
 sd=1
 
@@ -50,16 +52,8 @@ for (phi in phi_list){
 }
  }
 
-pos_pval_diff<-sapply(1:nrow(beta_list),function(x) 
-  bayes_posterior_check(beta=beta_list[x,],sd=sd_list[x,],r_vec=c(1e-5),test = "Q")$pval)
-res<-cbind(res,pos_pval_diff)
+  save(beta_list,file=paste0("./data_multiple_groups/beta_list_",phi,".RData"))
+  save(sd_list,file=paste0("./data_multiple_groups/sd_list_",phi,".RData"))
 
 }
 
-resnew<-cbind(phi=rep(c(0,0.2,0.4,0.6),each=1000),pval=matrix(res[,c(1,3,5,7)],ncol=1))
-resnew<-data.frame(resnew)
-names(resnew)<-c("phi","bayes_pval")
-p2<-ggplot(data=resnew[,],aes(x=bayes_pval))+
-  geom_histogram(color="black",fill="white",bins = 20)+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()
-p2

@@ -47,6 +47,7 @@ data_cardi_severe=matrix(c(4.06,1.73,
                     1.61,1.15,
                     2.80,1.80),ncol=2,byrow=T)
 data_cardi_severe_trans=t(sapply(1:nrow(data_cardi_severe),function(x) calculate_sd(rr=data_cardi_severe[x,1],rr_left=data_cardi_severe[x,2])))
+
 res4<-rma(yi=data_cardi_severe_trans[,1],vi=data_cardi_severe_trans[,2]^2)
 funnel(res4)
 
@@ -54,9 +55,9 @@ cereb = bayes_posterior_check(beta=data_cereb_trans[,1],sd=data_cereb_trans[,2],
 
 cereb_severe = bayes_posterior_check(beta=data_cereb_severe_trans[,1],sd=data_cereb_severe_trans[,2],test = "egger-hetero",print_test_dist = T)
 
-cardi = bayes_posterior_check(beta=data_cardi_trans[,1],sd=data_cardi_trans[,2], test = "Q",print_test_dist = T)
+cardi = bayes_posterior_check(beta=data_cardi_trans[,1],sd=data_cardi_trans[,2], test = "egger-hetero",print_test_dist = T)
 
-cardi_severe = bayes_posterior_check(beta=data_cardi_severe_trans[-3,1],sd=data_cardi_severe_trans[-3,2], test = "Q",print_test_dist = T)
+cardi_severe = bayes_posterior_check(beta=data_cardi_severe_trans[,1],sd=data_cardi_severe_trans[,2], test = "egger-hetero",print_test_dist = T)
 
 
 

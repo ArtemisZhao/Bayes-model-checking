@@ -1,10 +1,14 @@
 set.seed(123)
 
 ###batch experiment simulation
-etalist=seq(0.2,1,0.2)
+##batch magnitude
+etalist=seq(0,1,0.1)
+###repeats
+n=5000
 for (i in 1:length(etalist)){
+
   eta<-etalist[i]
-  beta<-rep(1,1000) ##fixed at 1
+  beta<-rep(1,n) ##fixed at 1
   ### number of individuals in each group
   n_arms = 100
   x<-rep(c(0:1),each=n_arms)
@@ -14,7 +18,7 @@ for (i in 1:length(etalist)){
   batchlabels<-c(batchlabel0,batchlabel1)
   
   # batch effect --- magnitude is eta
-  batcheffect<-c(rnorm(1000,0,eta)) ###rep(sd,1000)
+  batcheffect<-c(rnorm(n,0,eta)) ###rep(sd,1000)
   
   # simulate two studies: 
   # first with batch effects 
@@ -38,24 +42,5 @@ for (i in 1:length(etalist)){
 }
 
 
-###noisy experiment simulation
-
-beta<-rep(1,1000)
-x<-rep(c(0:1),each=200)
-
-xsmall<-rep(c(0:1),each=20)
-
-Y<-sapply(1:length(beta), function(i) x*beta[i]+rnorm(400))
-Ysmall<-sapply(1:length(beta), function(i) xsmall*beta[i]+rnorm(40))
-
-est<-t(sapply(1:ncol(Y),function(j)
-  summary(lm(Y[,j]~x))$coefficient[2,]))
-
-estnoisy<-t(sapply(1:ncol(Ysmall),function(j)
-  summary(lm(Ysmall[,j]~xsmall))$coefficient[2,]))
-
-data_nobatch_vs_noisy<-data.frame(cbind(est[,c(1,2)],estnoisy[,c(1,2)]))
-write.table(data_nobatch_vs_noisy,file="noisy.txt",quote=F,row.names = F,
-            col.names = c("beta_o","sd_o","beta_r","sd_r"))
 
 

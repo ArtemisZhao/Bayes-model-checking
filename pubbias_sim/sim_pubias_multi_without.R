@@ -1,4 +1,6 @@
 #logodds<-c(0.0,-0.405,-0.693,-1.386)
+
+set.seed(123)
 or<-c(2/3)
 
 ####10 studies
@@ -16,7 +18,7 @@ wipi<-function(p){
 betafinal2<-c()
 sdfinal2<-c()
 ###repeats for 100 times
-rep=500
+rep=5000
 for (k in 1:rep){
   for (i in 1:length(or)){ 
     curor<-or[i]
@@ -31,7 +33,9 @@ for (k in 1:rep){
       tim<-0
       while (tim<cur_snum){
         pcontrol<-runif(1,min=0.3,max=0.5)
-        ptreat<-pcontrol*curor
+        oddscontrol = pcontrol/(1-pcontrol) 
+        oddstreat= oddscontrol * curor
+        ptreat=oddstreat/(1+oddstreat)
         
         control<-rbinom(cur_indnum,1,pcontrol)
         treat<-rbinom(cur_indnum,1,ptreat)
@@ -54,3 +58,5 @@ for (k in 1:rep){
   sdfinal2<-rbind(sdfinal2,sdlist)
 }
 
+save(betafinal2,file="./data_multiple_groups/sim.control.multiple.beta.RData")
+save(sdfinal2,file="./data_multiple_groups/sim.control.multiple.sd.RData")

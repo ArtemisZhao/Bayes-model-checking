@@ -1,10 +1,12 @@
 set.seed(123)
 
-sdlist=c(2,5,10)
+##### noisy level
+sdlist=c(2,5,10,20)
+n=5000
 
 for (i in 1:length(sdlist)){
   sd<-sdlist[i]
-  beta1<-rep(1,1000)
+  beta1<-rep(1,n)
   ##
   n_arms=100
   x<-rep(c(0:1),each=n_arms)
@@ -15,7 +17,7 @@ for (i in 1:length(sdlist)){
   batchlabels<-c(batchlabel0,batchlabel1)
   
   # medium batch effect
-  batcheffect<-c(rnorm(1000,0,0.6)) 
+  batcheffect<-c(rnorm(n,0,0.6)) 
   
   Ybatch<-sapply(1:length(beta1), function(i) 
     x*beta1[i]+batchlabels*batcheffect[i]+rnorm(n_arms*2))
@@ -33,7 +35,7 @@ for (i in 1:length(sdlist)){
     summary(lm(Ybatch[,j]~x))$coefficient[2,]))
   
   data_batch_vs_noisy<-cbind(estbatch[,c(1,2)],est[,c(1,2)])
-  write.table(data_batch_vs_noisy,file=paste0("noisy_",sd,".dat"),
+  write.table(data_batch_vs_noisy,file=paste0("./data/noisy_",sd,".dat"),
               quote=F,row.names = F,
               col.names = c("beta_o","sd_o","beta_r","sd_r"))
   

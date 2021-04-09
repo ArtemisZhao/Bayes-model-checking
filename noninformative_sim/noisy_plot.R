@@ -22,10 +22,13 @@ data_plot<- data.frame(se=rep(c(2,5,10,20),each=n),rep_pval=replication_pval)
 
 data_plot[,1]<-factor(data_plot[,1])
 p3<-ggplot(data=data_plot[0:(2*n),],aes(x=rep_pval))+
-  geom_histogram(color="darkblue",fill="white",bins=10)+ylim(0,1200)+
+  geom_histogram(color="darkblue",fill="white",bins=10,boundary=0)+
+  scale_x_continuous(limits = c(0, 1))+
+  ylim(0,1600)+
   facet_grid(.~se,labeller = label_both)+theme_bw()+xlab("")
 p4<-ggplot(data=data_plot[(2*n+1):(4*n),],aes(x=rep_pval))+
-  geom_histogram(color="darkblue",fill="white",bins=10)+ylim(0,1200)+
+  geom_histogram(color="darkblue",fill="white",bins=10,boundary=0)+ylim(0,1600)+
+  scale_x_continuous(limits = c(0, 1))+
   facet_grid(.~se,labeller = label_both)+theme_bw()+xlab("Replication p-value")
 ggarrange(p3,p4,nrow=2)
 
@@ -37,8 +40,6 @@ ggplot(data=data_plot2,aes(x=sd,y=sensitivity))+
   geom_line(color="darkblue")+
   geom_point(color="darkblue")+
   theme_bw()+
-  geom_text(aes(label = round(sensitivity, 3)),vjust=1.25,
-            show.legend = FALSE) +
   xlab("noise magnitude")
 
 

@@ -1,6 +1,6 @@
 library(mvtnorm)
 library(e1071)
-bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(1e-5, 6e-3, 0.024),test="diff",print_test_dist=FALSE){
+bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),test="diff",print_test_dist=FALSE){
   res<-list()
   sd2=sd^2
   m<-length(beta)  ###number of replicates
@@ -60,6 +60,7 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(1e-5, 6e-3, 0.024),test
 
   betanewjs<-c()
   tnewjs<-c()
+  
   for (j in 1:m){
     #print(c(i,j))
     if (phi2==0){
@@ -75,6 +76,8 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(1e-5, 6e-3, 0.024),test
     betanewj = betaj+rnorm(1,0,sqrt(sd2[j]))
     betanewjs<-c(betanewjs,betanewj)
   }
+
+  
   ###test 4: Cochran's Q test
   if (test == "Q"){
     q = sum((betanewjs - mean(betanewjs))^2 / (sd2 + phi2))

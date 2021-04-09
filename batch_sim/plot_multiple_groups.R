@@ -17,16 +17,16 @@ names(resnew)<-c("phi","bayes_pval")
 
 p2<-ggplot(data=resnew[1:(2*n),],aes(x=bayes_pval))+
   geom_histogram(color="darkblue",fill="white",bins = 10,boundary=0)+
-  scale_x_continuous(limites=c(0,1))+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4000)
+  scale_x_continuous(limits=c(0,1))+
+  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4200)
 p3<-ggplot(data=resnew[(2*n+1):(4*n),],aes(x=bayes_pval))+
   geom_histogram(color="darkblue",fill="white",bins = 10,boundary=0)+
-  scale_x_continuous(limites=c(0,1))+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4000)
+  scale_x_continuous(limits=c(0,1))+
+  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4200)
 p4<-ggplot(data=resnew[(4*n+1):(6*n),],aes(x=bayes_pval))+
   geom_histogram(color="darkblue",fill="white",bins = 10,boundary=0)+
-  scale_x_continuous(limites=c(0,1))+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("Bayesian p-value")+ylim(0,4000)
+  scale_x_continuous(limits=c(0,1))+
+  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("Bayesian p-value")+ylim(0,4200)
 ggarrange(p2,p3,p4,nrow=3)
 
 

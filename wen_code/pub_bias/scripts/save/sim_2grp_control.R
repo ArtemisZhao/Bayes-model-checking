@@ -1,17 +1,8 @@
 set.seed(123)
 or<-c(2/3)
 
-####21 studies
 studynum<-c(1,1)
-####sample size in each study
-indnum<-c(50, 50)
-#nlist<-unlist(sapply(1:length(studynum), function(x) rep(indnum[x],studynum[x])))
-
-
-####with publication bias
-# wipi<-function(p){
-#   return(exp(-4*p^(1.5)))
-# }
+indnum<-c(100, 100)
 
 wipi<-function(p){
   if (p<0.05){return(1)}
@@ -20,8 +11,9 @@ wipi<-function(p){
 
 betafinal<-c()
 sdfinal<-c()
-###repeats for rep times
 rep=5000
+
+
 for (k in 1:rep){
   for (i in 1:length(or)){ 
     curor<-or[i]
@@ -36,7 +28,10 @@ for (k in 1:rep){
       tim<-0
       while (tim<cur_snum){
         pcontrol<-runif(1,min=0.3,max=0.5)
-        ptreat<-pcontrol*curor
+        oddscontrol = pcontrol/(1-pcontrol)
+        oddstreat= oddscontrol * curor
+        ptreat=oddstreat/(1+oddstreat)
+
         
         control<-rbinom(cur_indnum,1,pcontrol)
         treat<-rbinom(cur_indnum,1,ptreat)
@@ -63,6 +58,4 @@ for (k in 1:rep){
 outd = cbind(rep(1:rep), betafinal[,1], sdfinal[,1], betafinal[,2], sdfinal[,2])
 
 write(file="sim_data/sim.control.2grp.dat", t(outd), ncol=5)
-#pval<-sapply(1:rep, function(x) bayespval_beta_meta(beta=betafinal[x,],sd=sdfinal[x,],test="pub_bias"))
-#hist(pval)
 

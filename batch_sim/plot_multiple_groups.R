@@ -16,16 +16,18 @@ resnew<-data.frame(resnew)
 names(resnew)<-c("phi","bayes_pval")
 
 p2<-ggplot(data=resnew[1:(2*n),],aes(x=bayes_pval))+
-  geom_histogram(color="darkblue",fill="white",bins = 10)+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4000)
+  geom_histogram(color="darkblue",fill="white",bins = 10,boundary=0)+
+  scale_x_continuous(limits=c(0,1))+
+  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4200)
 p3<-ggplot(data=resnew[(2*n+1):(4*n),],aes(x=bayes_pval))+
-  geom_histogram(color="darkblue",fill="white",bins = 10)+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4000)
+  geom_histogram(color="darkblue",fill="white",bins = 10,boundary=0)+
+  scale_x_continuous(limits=c(0,1))+
+  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("")+ylim(0,4200)
 p4<-ggplot(data=resnew[(4*n+1):(6*n),],aes(x=bayes_pval))+
-  geom_histogram(color="darkblue",fill="white",bins = 10)+
-  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("Bayesian p-value")+ylim(0,4000)
+  geom_histogram(color="darkblue",fill="white",bins = 10,boundary=0)+
+  scale_x_continuous(limits=c(0,1))+
+  facet_grid(.~phi,labeller = label_both)+theme_bw()+xlab("Bayesian p-value")+ylim(0,4200)
 ggarrange(p2,p3,p4,nrow=3)
-
 
 
 percentage<-sapply(1:ncol(res),function(x) length(which(res[,x]<0.05))/5000)
@@ -36,7 +38,5 @@ ggplot(data=data_plot2,aes(x=eta,y=sensitivity))+
   geom_line(color="darkblue")+
   geom_point(color="darkblue")+
   theme_bw()+
-  geom_text(aes(label = round(sensitivity, 2)),vjust=1.25,
-            show.legend = FALSE) +
   xlab("batch magnitude")
 

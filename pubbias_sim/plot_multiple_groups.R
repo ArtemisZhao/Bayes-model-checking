@@ -1,8 +1,6 @@
-
 library(metafor)
 library(egg)
 library(ggplot2)
-
 
 ############plottting for with pubbias
 

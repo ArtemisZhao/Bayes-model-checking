@@ -60,4 +60,33 @@ cardi = bayes_posterior_check(beta=data_cardi_trans[,1],sd=data_cardi_trans[,2],
 cardi_severe = bayes_posterior_check(beta=data_cardi_severe_trans[,1],sd=data_cardi_severe_trans[,2], test = "egger-hetero",print_test_dist = T)
 
 
+#######forest plot for data_cardi_trans
+study_names<-c("Akbari 2020","Bai T 2020","Cao J 2020","Chen T 2020","Fu L 2020","Yuan M 2020")
+data_cardi1<-data.frame(data_cardi_trans)
+data_cardi1<-cbind(study_names,data_cardi1)
+names(data_cardi1)<-c("Study","beta","sd")
 
+p <- ggplot(data_cardi1)+
+  geom_pointrange(aes(x=Study, y=beta, ymin=beta-1.96*sd, ymax=beta+1.96*sd),color="darkblue",shape=3,fatten=2)+
+  geom_hline(yintercept = 0, linetype=2)+
+  labs( x = "Study", y = "95% CI for log risk ratio") +
+  coord_flip()+
+  theme_bw()
+
+p
+
+
+########forest plot for data_cardi_severe_trans
+study_names2<-c("Li Q 2020","Liu Jingyuan 2020","Qin 2020","Wan 2020","Wang Dan 2020","Zhang Guqin 2020")
+data_cardi2<-data.frame(data_cardi_severe_trans)
+data_cardi2<-cbind(study_names2,data_cardi2)
+names(data_cardi2)<-c("Study","beta","sd")
+
+p2 <- ggplot(data_cardi2)+
+  geom_pointrange(aes(x=Study, y=beta, ymin=beta-1.96*sd, ymax=beta+1.96*sd),color="darkblue",shape=3,fatten=2)+
+  geom_hline(yintercept = 0, linetype=2)+
+  labs( x = "Study", y = "95% CI for log risk ratio") +
+  coord_flip()+
+  theme_bw()
+
+p2

@@ -1,21 +1,14 @@
-all: setup intrigue analysis idr
-setup: scripts/batch_sim.pl scripts/sim_batch_detect.R
-	perl scripts/batch_sim.pl > scripts/batch_sim.cmd
-	openmp_wrapper -d scripts/batch_sim.cmd -t 10 
-	if [ ! -d "data" ]; then mkdir data; fi
-	mv sim*.dat data/
-intrigue: data/ scripts/run_intrigue.pl
-	perl scripts/run_intrigue.pl > scripts/batch_run.cmd
+all: simulation analysis plot	 
+simulation: scripts/sim_batch_two_grp.R scripts/sim_batch_multi_grp.R
+	if [ ! -d "sim_data" ]; then mkdir sim_data; fi
+	perl scripts/sim_two_grp.pl
+	perl scripts/sim_multi_grp.pl
+analysis: scripts/analyze_batch_two_grp.R scripts/analyze_batch_multi_grp.R scripts/analyze_batch_multi_grp_metafor.R sim_data/ 
 	if [ ! -d "output" ]; then mkdir output; fi
-	openmp_wrapper -d scripts/batch_run.cmd -t 10 
-analysis: output/ scripts/summarize_meta.pl scripts/summarize_cefn.pl scripts/ks_test.R scripts/batch_ks_test.pl scripts/plot_detection.R
-	if [ ! -d "results" ]; then mkdir results; fi
-	perl scripts/summarize_cefn.pl > results/cefn.detect.out
-	perl scripts/summarize_meta.pl > results/meta.detect.out
-	perl scripts/batch_ks_test.pl | sort -nk1 > results/2sample.ks.out
-	Rscript scripts/plot_detection.R
-idr:
-	Rscript scripts/idr_batch_detect.R 
+	perl scripts/analyze_two_grp.pl
+	perl scripts/analyze_multi_grp_metafor.pl
+	perl scripts/analyze_multi_grp.pl
+plot: output/ 
 clean:
-	rm -rf data/ output/ results/ scripts/*.cmd
+	rm -rf sim_data/ output/
 

@@ -12,8 +12,8 @@ nc = dim(d)[2]
 seq_b = seq(2,nc,2)
 seq_s = seq(3,nc,2) 
 
-beta = d[,seq_b]
-sd = d[,seq_s]
+beta = as.matrix(d[,seq_b])
+sd = as.matrix(d[,seq_s])
 
 
 p = dim(d)[1]
@@ -21,8 +21,8 @@ pval_egger =c()
 pval_Q = c()
 
 for (i in 1:p){
-	yi = as.numeric(beta[i,])
-	se = as.numeric(sd[i,])
+	yi = beta[i,]
+	se = sd[i,]
 	vi = se^2
 	rst = rma(yi, vi, method="FE")
 	erst = regtest(rst)	

@@ -1,12 +1,12 @@
 
 res<-c()
-phi_list = seq(0,1,0.1)
+phi_list = seq(0,0.2,0.1)
 for (phi in phi_list){
   load(file=paste0("./data_multiple_groups/beta_list_",phi,".RData"))
   load(file=paste0("./data_multiple_groups/sd_list_",phi,".RData"))
                
   pos_pval_diff<-sapply(1:nrow(beta_list),function(x) 
-    bayes_posterior_check(beta=beta_list[x,],sd=sd_list[x,],r_vec=c(0),test = "Q")$pval)
+    posterior_prp(beta=beta_list[x,],sd=sd_list[x,],test = "Q")$pvalue)
   res<-cbind(res,pos_pval_diff)
 }
 

@@ -1,6 +1,8 @@
 library(mvtnorm)
 library(e1071)
-bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),test="diff",print_test_dist=FALSE){
+
+###plotting posterior sample
+posterior_prp<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),test="Q",print_test_dist=FALSE){
   res<-list()
   sd2=sd^2
   m<-length(beta)  ###number of replicates
@@ -10,14 +12,13 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),te
   #eta2_vec = c(mean(beta),min(beta),max(beta))^2
   
   ## test 2 weighted average
-  
   wts = 1/sd2
   center = sum(wts*beta)/sum(wts)
   eta2_vec = c(center, center-sqrt(1/sum(wts)),center+sqrt(1/sum(wts)))^2
    
-   ##test 3 
+  ## test 3 
   #eta2_vec = c(center)^2
-  res[["eta_grid"]] = eta2_vec
+  #res[["eta_grid"]] = eta2_vec
   rv = r_vec
   
   make_grid <-function(eta2){
@@ -30,7 +31,7 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),te
   for (i in 1:length(eta2_vec)){
     grid = rbind(grid, make_grid(eta2_vec[i]))
   }
-  
+  res[["grid"]]= grid
   omg2_list = grid[,1]
   phi2_list = grid[,2]
   
@@ -59,45 +60,76 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),te
   barbeta<-rnorm(1,barbeta_pos_mean,sqrt(barbeta_pos_var)) 
 
   betanewjs<-c()
-  tnewjs<-c()
   
   for (j in 1:m){
-    #print(c(i,j))
-    if (phi2==0){
-      betaj=barbeta
-    }
-    else{
-    betaj_var<-1/(1/phi2+1/sd2[j])
-    betaj_mean<-betaj_var*(barbeta/phi2+beta[j]/sd2[j])
-    betaj<-rnorm(1,betaj_mean,sqrt(betaj_var))
-    #print(betaj)
-    }
-    
-    betanewj = betaj+rnorm(1,0,sqrt(sd2[j]))
-    betanewjs<-c(betanewjs,betanewj)
-  }
+     #print(c(i,j))
+   if (phi2==0){
+       betaj=barbeta
+     }
+     else{
+     betaj_var<-1/(1/phi2+1/sd2[j])
+     betaj_mean<-betaj_var*(barbeta/phi2+beta[j]/sd2[j])
+     betaj<-rnorm(1,betaj_mean,sqrt(betaj_var))
+     #print(betaj)
+     }
+     
+     betanewj = betaj+rnorm(1,0,sqrt(sd2[j]))
+     betanewjs<-c(betanewjs,betanewj)
+   }
 
   
   ###test 4: Cochran's Q test
   if (test == "Q"){
-    q = sum((betanewjs - mean(betanewjs))^2 / (sd2 + phi2))
-    q_orig = sum((beta - mean(beta))^2 / (sd2 + phi2))
+    q = sum((betanewjs - barbeta)^2 / (sd2 + phi2))
+    #q = sum(abs(betanewjs - mean(betanewjs)) / (sd2 + phi2))
+    #q_orig = sum(abs(beta - mean(beta)) / (sd2 + phi2))
+    q_orig = sum((beta - barbeta)^2 / (sd2 + phi2))
     dist_list<- c(dist_list,q)
     dist_list2<-c(dist_list2,q-q_orig)
     count = count + (q>q_orig)
   }
   ####test statistics 3 egger regression with heterogeneous param
   else if (test == "egger-hetero"){
-    y = betanewjs / sqrt(sd2 + phi2)
-    x = 1 / sqrt(sd2 + phi2)
-    a = abs(summary(lm(y ~ x))$coefficients[1,1])
-    dist_list = c(dist_list,a)
-   
-    y_orig = beta / sqrt(sd2 + phi2)
-    x_orig = 1 / sqrt(sd2 + phi2)
-    com = abs(summary(lm(y_orig~x_orig))$coefficients[1,1])
-    dist_list2= c(dist_list2,a-com)
-    count = count + (a>com)
+    # # y = betanewjs / sqrt(sd2 + phi2)
+    # # x = 1 / sqrt(sd2 + phi2)
+    # # a = abs(summary(lm(y ~ x))$coefficients[1,1])
+    # egger_sim = abs(sum((betanewjs-barbeta)/sqrt(phi2+sd2)))
+    # egger_orig = abs(sum((beta-barbeta)/sqrt(phi2+sd2)))
+    # 
+    # # y_orig = beta / sqrt(sd2 + phi2)
+    # # x_orig = 1 / sqrt(sd2 + phi2)
+    # # com = abs(summary(lm(y_orig~x_orig))$coefficients[1,1])
+    # dist_list2= c(dist_list2,egger_sim-egger_orig)
+    # count = count + (egger_sim>egger_orig)
+    y = betanewjs/sqrt(sd2+phi2)
+    x = 1/sqrt(sd2+phi2)
+    
+    Sxx = sum( (x-mean(x))*x)
+    Sxy = sum( (x-mean(x))*y)
+    Syy = sum( (y-mean(y))*y)
+    
+    b1 = Sxy/Sxx
+    b0 = mean(y)- b1*mean(x)
+    
+    #s2 = (Syy - b1^2*Sxx)/m
+    #vb0 = s2*(1/m+mean(x)^2/Sxx)
+    
+    #egger_sim = b0^2/vb0
+    egger_sim = abs(b0)
+    y = beta/sqrt(sd2+phi2)
+    x = 1/sqrt(sd2+phi2)
+    Sxy = sum( (x-mean(x))*y)
+    Syy = sum( (y-mean(y))*y)
+    
+    b1 = Sxy/Sxx
+    b0 = mean(y)- b1*mean(x)
+    #s2 = (Syy - b1^2*Sxx)/m
+    #vb0 = s2*(1/m+mean(x)^2/Sxx)
+    
+    #egger_orig = b0^2/vb0
+    egger_orig = abs(b0)
+    dist_list2= c(dist_list2, (egger_sim - egger_orig))
+    count = count + ( egger_sim > egger_orig )
   }
   ###test statistics 2 skewness:
   else if (test=="skew"){
@@ -126,7 +158,7 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),te
   count = count+(dist>com)
   }
   else{
-    dist = test(betanewjs) ####what about phi,omega?
+    dist = test(betanewjs) #### needs modification!
     com = test(beta)
     dist_list2<-c(dist_list2,dist-com)
     count = count+(dist>com)
@@ -137,35 +169,11 @@ bayes_posterior_check<-function(beta,sd,L=1000,r_vec = c(0,1e-5, 6e-3, 0.024),te
     hist(dist_list2)
  }
   res[["n_sim"]]=L
+  ###
   res[["test_stats_dif"]]=dist_list2
-  res[["pval"]]=count/L
+  ###
+  res[["pvalue"]]=count/L
   res[["test"]]=test
   return( res)
 }
-
-
-set.seed(123)
-sim_data<-function(k, omg, n=5, sd=1){
-  beta = rnorm(1,mean=0,sd=omg)
-  
-  bv = rnorm(n, mean = beta, sd=k*abs(beta))
-  
-  zv = rnorm(n, mean = bv, sd = sd)
-  
-  return(matrix(zv,nrow=1))
-}
-
-#null_data = t(sapply(1:4000, function(x) sim_data(k=0,omg=0,r=0.6)))
-fix_data = t(sapply(1:1000, function(x) sim_data(k=0, omg=1, n=10)))
-rep_data = t(sapply(1:1000, function(x) sim_data(k=0.1, omg=1, n=10)))
-irr_data = t(sapply(1:1000,  function(x) sim_data(k=3, omg=1, n=10)))
-
-fix_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=fix_data[x,],sd=rep(1,10),test="Q"))
-
-rep_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=rep_data[x,],sd=rep(1,10),test="Q"))
-
-irr_p<-sapply(1:1000, function(x) bayes_posterior_check(beta=irr_data[x,],sd=rep(1,10),test="Q"))
-
-
-
 

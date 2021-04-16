@@ -4,7 +4,7 @@ or<-c(2/3)
 ####21 studies
 studynum<-c(1,1)
 ####sample size in each study
-indnum<-c(50, 50)
+indnum<-c(100, 100) ####increasing sample size
 #nlist<-unlist(sapply(1:length(studynum), function(x) rep(indnum[x],studynum[x])))
 
 

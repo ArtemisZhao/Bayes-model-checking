@@ -5,12 +5,12 @@ set.seed(123)
 etalist=seq(0,1,0.1)
 ###repeats
 n=5000
+### number of individuals in each group
+n_arms = 100
 for (i in 1:length(etalist)){
 
   eta<-etalist[i]
   beta<-rep(1,n) ##fixed at 1
-  ### number of individuals in each group
-  n_arms = 100
   x<-rep(c(0:1),each=n_arms)
   
   batchlabel0<-c(rep(1,n_arms*0.2),rep(0,n_arms*0.8))

@@ -4,8 +4,8 @@ args = commandArgs(trailingOnly=TRUE)
 filename = args[1]
 p_thresh = as.numeric(args[2])
 
-filename="pubbias_2grp_pthresh_0.01.prp.out"
-p_thresh=0.01
+#filename="pubbias_2grp_pthresh_0.01.prp.out"
+
 d = read.table(filename)
 
 d = data.frame(d)

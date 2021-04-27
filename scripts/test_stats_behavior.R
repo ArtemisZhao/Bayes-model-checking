@@ -15,13 +15,16 @@ sim_data<-function(r, omg, n=10, sd=rep(1,10)){
   return(matrix(zv,nrow=1))
 }
 
-repdata<-t(sapply(1:1000, function(x) sim_data(r=1e-5,omg=1,n=5,sd=rep(1,5))))
+repdata<-t(sapply(1:1000, function(x) sim_data(r=1e-5,omg=1,n=10,sd=rep(1,10))))
 
 pvalegger<-sapply(1:1000,function(x) 
-  bayes_posterior_check(beta=repdata[x,],sd=rep(1,5),test="egger-hetero",L=2000)$pval)
+  posterior_prp(beta=repdata[x,],sd=rep(1,10),test="egger-hetero")$pvalue)
+
+pvalQ<-sapply(1:1000,function(x) 
+  posterior_prp(beta=repdata[x,],sd=rep(1,10),test="Q")$pvalue)
 
 eggerres<-sapply(1:1000,function(x) 
-  regtest(repdata[x,],sei=rep(1,5),control=list(maxiter=5000))$pval)
+  regtest(repdata[x,],sei=rep(1,5))$pval)
 
 data<-cbind(egger=eggerres,pos_pval=pvalegger)
 data=data.frame(data)
@@ -32,7 +35,7 @@ pp1<-ggplot(data,aes(x=egger,y=pos_pval))+
 
 
 pvalQ<-sapply(1:1000,function(x) 
-  bayes_posterior_check(beta=repdata[x,],sd=rep(1,5),test="Q",L=2000)$pval)
+  posterior_prp(beta=repdata[x,],sd=rep(1,5),test="Q",L=1000)$pval)
 
 qtest<-sapply(1:1000,function(x) 
   rma.uni(yi=repdata[x,],sei=rep(1,5))$QEp)

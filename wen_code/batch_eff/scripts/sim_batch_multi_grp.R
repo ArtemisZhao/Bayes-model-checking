@@ -28,8 +28,11 @@ shuffle <- function(xv, rep){
 # simulate pure batch contamination
 sim_batch<-function(bb_sd){
 	
-	bbar = rnorm(1, sd=0.5)
-	btv = bbar +  rnorm(grp_num, sd=sqrt(0.02*bbar^2))
+	omg = 0.5
+	r = 0.016 #sing-consistency rate 0.96
+	phi = sqrt(omg^2*r/(1-r))
+	bbar = rnorm(1, sd=omg)
+	btv = bbar +  rnorm(grp_num, sd=phi)
 	
 	bbv = rep(0, grp_num)
 	bbv[1:bc_grp_num]=rnorm(bc_grp_num, sd=bb_sd)

@@ -8,22 +8,18 @@ run_analysis<-function(x){
 	beta = x[seq(2,p,2)]
 	se = x[seq(3,p,2)]
 
-	return(posterior_prp(beta,se,test="Q")$pvalue)
+	return(posterior_prp(beta,se,test="Q",r_vec=c(0))$pvalue)
 }
 
 
-args = commandArgs(trailingOnly=TRUE)
-filename = args[1]
-bb = args[2]
 
-
-d = read.table(filename)
+d = read.table("sim_data/batch_multigrp_batch_sd_0.dat")
 attach(d)
 N = dim(d)[1]
 
 pvec = apply(d, 1, function(x) run_analysis(x))
 
-outfile = paste0("output/batch_multigrp_batch_sd_", bb,".prp.out")
+outfile = paste0("output/batch_multigrp_batch_sd_0_fixed_eff.prp.out")
 outd = cbind(1:N, pvec)
 write(file=outfile, t(outd), ncol=2)
 
